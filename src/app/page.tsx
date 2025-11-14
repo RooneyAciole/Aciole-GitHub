@@ -80,20 +80,32 @@ export default function Home() {
   const [searchTerm, setSearchTerm] = useState('')
   const [showWarning, setShowWarning] = useState(false)
   const [chatOpen, setChatOpen] = useState(false)
-  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', message: string}>>([])
+  const [chatMessages, setChatMessages] = useState<Array<{role: 'user' | 'ai', message: string}>>([])]
   const [chatInput, setChatInput] = useState('')
-  const [currentTime, setCurrentTime] = useState(new Date())
+  const [currentTime, setCurrentTime] = useState('')
   const [selectedAsset, setSelectedAsset] = useState<typeof ALL_ASSETS[0] | null>(null)
   const [tradeTimer, setTradeTimer] = useState(60)
   const [trendUpdate, setTrendUpdate] = useState(0)
+  const [mounted, setMounted] = useState(false)
+
+  // Evitar hydration mismatch - só renderizar após montagem
+  useEffect(() => {
+    setMounted(true)
+  }, [])
 
   // Relógio sincronizado
   useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
+    if (!mounted) return
+    
+    const updateTime = () => {
+      const now = new Date()
+      setCurrentTime(now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }))
+    }
+    
+    updateTime() // Atualiza imediatamente
+    const timer = setInterval(updateTime, 1000)
     return () => clearInterval(timer)
-  }, [])
+  }, [mounted])
 
   // Timer de 1 minuto
   useEffect(() => {
@@ -174,10 +186,6 @@ export default function Home() {
     }, 1000)
   }
 
-  const formatTime = (date: Date) => {
-    return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-  }
-
   const formatTradeTimer = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
@@ -204,7 +212,9 @@ export default function Home() {
               <div className="flex items-center gap-2 bg-slate-800/50 px-4 py-2 rounded-lg border border-slate-700">
                 <Clock className="w-5 h-5 text-emerald-400" />
                 <div className="text-right">
-                  <div className="text-lg font-mono font-bold text-white">{formatTime(currentTime)}</div>
+                  <div className="text-lg font-mono font-bold text-white">
+                    {mounted ? currentTime : '00:00:00'}
+                  </div>
                   <div className="text-xs text-slate-400">Horário da Corretora</div>
                 </div>
               </div>
